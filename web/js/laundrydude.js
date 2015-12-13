@@ -83,8 +83,8 @@ var common_options = {
   },
   hAxis: {
     viewWindow: {
-      min: [16, 15, 0,],
-      max: [20,15,0]
+      min: [0, 0, 0,],
+      max: [24,0,0]
     }
   }
 };
