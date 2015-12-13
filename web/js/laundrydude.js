@@ -50,10 +50,11 @@ showHumidity = function(humidity_data) {
 showLight = function(light_data) {
   var on_state = null;
 
-  if (light_data[1] > ON_THRESHOLD)
-    on_state = ('ON');
-  else
-    on_state = ('OFF');
+  if (light_data)
+    if (light_data[1] > ON_THRESHOLD)
+      on_state = ('ON');
+    else
+      on_state = ('OFF');
 
   showData(on_state, '#light');
 }
