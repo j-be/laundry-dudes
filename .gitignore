@@ -1,0 +1,11 @@
+.project
+.cproject
+server/virtenv
+.settings/*
+Debug/*
+
+*.pyc
+video-stuff/*
+schematics/*
+*/build-uno/
+*.db
