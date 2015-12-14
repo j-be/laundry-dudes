@@ -9,3 +9,6 @@ video-stuff/*
 schematics/*
 */build-uno/
 *.db
+
+submission*/*
+presentation/*
