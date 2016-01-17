@@ -8,6 +8,7 @@
 
 // Serial speed
 #define SERIAL_BAUDRATE 9600
+#define FETCH_INTERVAL 100
 
 // Struct carrying BME280 data
 struct Bme280Data {
@@ -37,10 +38,14 @@ void setup() {
 void loop() {
   readHumPressTemp();
 
-  Serial.print("h=");Serial.println(bme280Data.humidity);
-  xbeeSerial.print("h=");xbeeSerial.println(bme280Data.humidity);
-
-  delay(10000);
+  if (xbeeSerial.available()) {
+    switch (xbeeSerial.read()) {
+    case 'h':
+      xbeeSerial.print("h=");xbeeSerial.println(bme280Data.humidity);
+      break;
+    }
+  } else
+    delay(FETCH_INTERVAL);
 }
 
 void readHumPressTemp() {

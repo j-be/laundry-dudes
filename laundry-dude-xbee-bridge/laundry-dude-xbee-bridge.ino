@@ -19,12 +19,21 @@ void setup() {
 }
 
 void loop() {
-	// put your main code here, to run repeatedly:
-	recvWithEndMarker();
-	showNewData();
+	request('l');
+	delay(2500);
+	request('h');
+	delay(2500);
 }
 
-void showNewData() {
+void request(char type) {
+	// put your main code here, to run repeatedly:
+	xbeeSerial.print(type);
+	while (!xbeeSerial.available());
+	recvWithEndMarker();
+	sendData();
+}
+
+void sendData() {
 	if (newData == true) {
 		Serial.print("This just in ... ");
 		Serial.println(receivedChars);

@@ -24,10 +24,14 @@ void setup() {
 void loop() {
   readLightsensor();
 
-  if (ledSampleCounter >= numLedSamples)
-    sendLightData();
-
-  delay(FETCH_INTERVAL);
+  if (xbeeSerial.available()) {
+    switch (xbeeSerial.read()) {
+    case 'l':
+      sendLightData();
+      break;
+    }
+  } else
+    delay(FETCH_INTERVAL);
 }
 
 void readLightsensor() {
