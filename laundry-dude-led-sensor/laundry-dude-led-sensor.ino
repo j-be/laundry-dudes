@@ -31,10 +31,9 @@ void loop() {
 }
 
 void readLightsensor() {
-  int sample = analogRead(LIGHTSENSOR_PIN);
-  Serial.print("d:");Serial.println(sample); 
-  ledSamples[ledSampleCounter] = sample;
+  ledSamples[ledSampleCounter] = analogRead(LIGHTSENSOR_PIN);
   ledSampleCounter++;
+  ledSampleCounter %= numLedSamples;
 }
 
 void sendLightData() {
@@ -46,5 +45,4 @@ void sendLightData() {
   avg /= numLedSamples;
 
   xbeeSerial.print("l=");xbeeSerial.println(avg);
-  ledSampleCounter = 0;
 }
