@@ -83,6 +83,10 @@ def save_data():
 				changeState(4)
 			if value <= LED_THRESHOLD and washer_state.value == 4:
 				changeState(0)
+		elif data_type == "a":
+			if abs(value + 1100) > 300 and washer_state.value == 2:
+				changeState(3)
+
 		data_types[data_type](value=value)
 
 	return jsonify({"e": 0}), 201

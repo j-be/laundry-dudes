@@ -27,6 +27,13 @@ class WasherLed(DataPoint):
 	def getDataType():
 		return 'l'
 
+class WasherAccel(DataPoint):
+	value = FloatCol()
+
+	@staticmethod
+	def getDataType():
+		return 'a'
+
 class State(DataPoint):
 	value = IntCol()
 
