@@ -43,6 +43,9 @@ void loop() {
     case 'h':
       xbeeSerial.print("h=");xbeeSerial.println(bme280Data.humidity);
       break;
+    case 't':
+      xbeeSerial.print("t=");xbeeSerial.println(bme280Data.temperature);
+      break;
     }
   } else
     delay(FETCH_INTERVAL);
