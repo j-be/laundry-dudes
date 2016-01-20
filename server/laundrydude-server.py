@@ -19,6 +19,10 @@ def _getTimeOfDay(dt):
 def index():
 	return app.send_static_file('index.html')
 
+@app.route('/laundrydude/<string:file_name>')
+def static_html_proxy(file_name):
+	return app.send_static_file(file_name)
+
 @app.route('/laundrydude/css/<path:path>')
 def static_css_proxy(path):
 	return app.send_static_file('css/' + path)
@@ -26,6 +30,11 @@ def static_css_proxy(path):
 @app.route('/laundrydude/js/<path:path>')
 def static_js_proxy(path):
 	return app.send_static_file('js/' + path)
+
+@app.route('/laundrydude/img/<path:path>')
+def static_img_proxy(path):
+	print path
+	return app.send_static_file('img/' + path)
 
 @app.route('/laundrydude/api/data')
 def get_data():
