@@ -20,9 +20,13 @@ void setup() {
 
 void loop() {
 	request('l');
-	delay(2500);
+	delay(1000);
 	request('h');
-	delay(2500);
+	delay(1000);
+	request('t');
+	delay(1000);
+	request('a');
+	delay(1000);
 }
 
 void request(char type) {
