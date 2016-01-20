@@ -38,8 +38,16 @@ void setup() {
   Serial.begin(SERIAL_BAUDRATE);
   xbeeSerial.begin(SERIAL_BAUDRATE);
 
+  // Setup lock
+  pinMode(A0, OUTPUT);
+  setLockState(false);
+
   // Setup Accelerometer
   initMpu();
+}
+
+void setLockState(bool locked) {
+  digitalWrite(A0, locked);
 }
 
 void loop() {
@@ -54,9 +62,21 @@ void loop() {
     case 'a':
       xbeeSerial.print("a=");xbeeSerial.println(aaWorld.x + aaWorld.y + aaWorld.z);
       break;
+    case 'b':
+      while (!xbeeSerial.available());
+      switch (xbeeSerial.read()) {
+        case '1':
+          setLockState(true);
+          break;
+        case '0':
+          setLockState(false);
+          break;
+      }
+      while (xbeeSerial.available())
+        xbeeSerial.read();
+      break;
     }
-  } else
-    delay(FETCH_INTERVAL);
+  }
 }
 
 void readLightsensor() {
