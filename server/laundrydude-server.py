@@ -10,10 +10,14 @@ from flask import Flask, request, jsonify, abort
 data_types = None
 app = Flask(__name__)
 
+washer_state = None
 
 def _getTimeOfDay(dt):
 	return [dt.hour, dt.minute, dt.second]
 
+def changeState(new_state):
+	global washer_state
+	washer_state = domain.State(value=new_state)
 
 @app.route('/laundrydude')
 def index():
@@ -58,6 +62,7 @@ def clear_db():
 
 @app.route('/laundrydude/api/data', methods=['POST'])
 def save_data():
+	global washer_state
 	global values
 
 	data_dict = request.form
@@ -68,6 +73,16 @@ def save_data():
 
 	for data_type in data_dict.keys():
 		value = float(data_dict[data_type].strip())
+
+		if data_type == "l":
+			if value > LED_THRESHOLD and washer_state.value == 0:
+				changeState(1)
+			if value <= LED_THRESHOLD and washer_state.value == 1:
+				changeState(2)
+			if value > LED_THRESHOLD and washer_state.value > 1 and washer_state != 4:
+				changeState(4)
+			if value <= LED_THRESHOLD and washer_state.value == 4:
+				changeState(0)
 		data_types[data_type](value=value)
 
 	return jsonify({"e": 0}), 201
@@ -75,4 +90,5 @@ def save_data():
 
 if __name__ == '__main__':
 	data_types = domain.createDb()
+	washer_state = domain.State(value=0)
 	app.run(host='0.0.0.0', debug=True)

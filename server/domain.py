@@ -1,4 +1,4 @@
-from sqlobject import SQLObject, FloatCol, DateTimeCol, connectionForURI, sqlhub
+from sqlobject import SQLObject, FloatCol, IntCol, DateTimeCol, connectionForURI, sqlhub
 
 #DATABASE_FILE = '/:memory:'
 DATABASE_FILE = '/tmp/laundrydude.db'
@@ -26,6 +26,13 @@ class WasherLed(DataPoint):
 	@staticmethod
 	def getDataType():
 		return 'l'
+
+class State(DataPoint):
+	value = IntCol()
+
+	@staticmethod
+	def getDataType():
+		return 's'
 
 def connectDb():
 	data_types = {}
