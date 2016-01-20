@@ -14,7 +14,7 @@ Process curl;
 void setup() {
 	Bridge.begin();
 
-	Serial.begin(9600);
+	Console.begin();
 	xbeeSerial.begin(9600);
 }
 
@@ -26,6 +26,8 @@ void loop() {
 }
 
 void request(char type) {
+	Console.print("Request: ");Console.println(type);
+	while (xbeeSerial.available()) xbeeSerial.read();
 	// put your main code here, to run repeatedly:
 	xbeeSerial.print(type);
 	while (!xbeeSerial.available());
@@ -35,8 +37,8 @@ void request(char type) {
 
 void sendData() {
 	if (newData == true) {
-		Serial.print("This just in ... ");
-		Serial.println(receivedChars);
+		Console.print("This just in ... ");
+		Console.println(receivedChars);
 		postData(receivedChars);
 		newData = false;
 	}
