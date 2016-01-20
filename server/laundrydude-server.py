@@ -13,7 +13,7 @@ app = Flask(__name__)
 washer_state = None
 
 def _getTimeOfDay(dt):
-	return [dt.hour, dt.minute, dt.second]
+	return "%02d.%02d, %02d:%02d" % (dt.day, dt.month, dt.hour, dt.minute)
 
 def changeState(new_state):
 	global washer_state
@@ -48,6 +48,18 @@ def get_data():
 		domain_cls = data_types[data_type]
 		values[data_type] = [(_getTimeOfDay(row.timestamp), row.value)
 							 for row in domain_cls.select()]
+
+	return jsonify(values), 200
+
+@app.route('/laundrydude/api/last-data')
+def get_last_data():
+	values = {}
+
+	for data_type in ['h', 's', 't']:
+		domain_cls = data_types[data_type]
+		last_row = domain_cls.select().orderBy('-id').limit(1).getOne()
+		print last_row
+		values[data_type] = (_getTimeOfDay(last_row.timestamp), last_row.value)
 
 	return jsonify(values), 200
 
