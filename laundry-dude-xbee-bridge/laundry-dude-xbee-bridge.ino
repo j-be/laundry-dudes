@@ -30,7 +30,11 @@ void request(char type) {
 	while (xbeeSerial.available()) xbeeSerial.read();
 	// put your main code here, to run repeatedly:
 	xbeeSerial.print(type);
-	while (!xbeeSerial.available());
+	int x = 0;
+	while (!xbeeSerial.available() && x < 10) {
+		x++;
+		delay(100);
+	}
 	recvWithEndMarker();
 	sendData();
 }
