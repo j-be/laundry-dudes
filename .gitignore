@@ -12,3 +12,5 @@ schematics/*
 
 submission*/*
 presentation/*
+
+*.swp

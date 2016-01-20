@@ -35,6 +35,7 @@ uint8_t fifoBuffer[64];
 SoftwareSerial xbeeSerial(2, 3); // RX, TX
 
 void setup() {
+  // Setup serials
   Serial.begin(SERIAL_BAUDRATE);
   xbeeSerial.begin(SERIAL_BAUDRATE);
 

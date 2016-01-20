@@ -28,9 +28,11 @@ SoftwareSerial xbeeSerial(2, 3); // RX, TX
 void setup() {
   Serial.begin(SERIAL_BAUDRATE);
 
+  Serial.println("BME280");
   if (!bme.begin()) {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
-  };
+  } else
+    Serial.println("BME280 sensor initialized");
 
   xbeeSerial.begin(SERIAL_BAUDRATE);
 }

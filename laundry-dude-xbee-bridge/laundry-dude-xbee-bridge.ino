@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 #include <Console.h>
 
-#define SERVER_URI "http://192.168.1.5:5000/laundrydude/api/data"
+#define SERVER_URI "http://192.168.1.147:5000/laundrydude/api/data"
 
 const byte numChars = 32;
 char receivedChars[numChars];		// an array to store the received data
@@ -32,7 +32,7 @@ void loop() {
 void request(char type) {
 	Console.print("Request: ");Console.println(type);
 	while (xbeeSerial.available()) xbeeSerial.read();
-	// put your main code here, to run repeatedly:
+
 	xbeeSerial.print(type);
 	int x = 0;
 	while (!xbeeSerial.available() && x < 10) {

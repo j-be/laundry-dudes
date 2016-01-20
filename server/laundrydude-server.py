@@ -6,6 +6,7 @@ import domain
 
 from flask import Flask, request, jsonify, abort
 
+LED_THRESHOLD = 500
 
 data_types = None
 app = Flask(__name__)
@@ -23,7 +24,7 @@ def changeState(new_state):
 def index():
 	return app.send_static_file('index.html')
 
-@app.route('/laundrydude/<string:file_name>')
+@app.route('/laundrydude/<path:file_name>')
 def static_html_proxy(file_name):
 	return app.send_static_file(file_name)
 
@@ -58,7 +59,6 @@ def get_last_data():
 	for data_type in ['h', 's', 't']:
 		domain_cls = data_types[data_type]
 		last_row = domain_cls.select().orderBy('-id').limit(1).getOne()
-		print last_row
 		values[data_type] = (_getTimeOfDay(last_row.timestamp), last_row.value)
 
 	return jsonify(values), 200
@@ -75,10 +75,8 @@ def clear_db():
 @app.route('/laundrydude/api/data', methods=['POST'])
 def save_data():
 	global washer_state
-	global values
 
 	data_dict = request.form
-	print (request.form)
 
 	if not data_dict:
 		abort(400)
