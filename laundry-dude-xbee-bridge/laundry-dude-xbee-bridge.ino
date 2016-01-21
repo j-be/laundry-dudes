@@ -3,10 +3,12 @@
 #include <Console.h>
 
 #define SERVER_URI "http://192.168.1.147:5000/laundrydude/api/data"
+#define BLOCKER_STATE_URI "http://192.168.1.147:5000/laundrydude/api/blocker"
 
 const byte numChars = 32;
 char receivedChars[numChars];		// an array to store the received data
 bool newData = false;
+char block = false;
 
 SoftwareSerial xbeeSerial(8, 9); // RX, TX
 Process curl;
@@ -16,6 +18,14 @@ void setup() {
 
 	Console.begin();
 	xbeeSerial.begin(9600);
+
+	// Setup lock
+	pinMode(A0, OUTPUT);
+	setLockState(false);
+}
+
+void setLockState(bool locked) {
+	digitalWrite(A0, locked);
 }
 
 void loop() {
@@ -27,6 +37,14 @@ void loop() {
 	delay(1000);
 	request('a');
 	delay(1000);
+	getData();
+	set('b', block);
+	setLockState(block == '1');
+}
+
+void set(char type, char value) {
+	xbeeSerial.print(type);
+	xbeeSerial.println(value);
 }
 
 void request(char type) {
@@ -88,3 +106,19 @@ void postData(const char* data) {
 	curl.runAsynchronously();
 }
 
+void getData() {
+	Process p;
+	p.begin("curl");
+	p.addParameter(BLOCKER_STATE_URI);
+	p.run();
+
+	while (p.available()>0) {
+		char c = p.read();
+		switch(c) {
+			case 'b':
+				if (p.read() == '=')
+					block = p.read();
+				break;
+		}
+	}
+}
