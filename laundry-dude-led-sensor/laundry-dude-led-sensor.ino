@@ -11,6 +11,8 @@
 #define FETCH_INTERVAL 100
 #define POST_INTERVAL 5000
 
+#define TAG_LENGTH 12
+
 const int numLedSamples = POST_INTERVAL / FETCH_INTERVAL;
 int ledSamples[numLedSamples];
 int ledSampleCounter = 0;
@@ -31,13 +33,17 @@ uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64];
 
+char rfidTag[TAG_LENGTH + 1];
+
 // Software serial for XBee module
 SoftwareSerial xbeeSerial(2, 3); // RX, TX
+// Hardware serial for RFID reader
+#define rfidSerial Serial
 
 void setup() {
   // Setup serials
-  Serial.begin(SERIAL_BAUDRATE);
   xbeeSerial.begin(SERIAL_BAUDRATE);
+  rfidSerial.begin(SERIAL_BAUDRATE);
 
   // Setup lock
   pinMode(A0, OUTPUT);
@@ -51,7 +57,37 @@ void setLockState(bool locked) {
   digitalWrite(A0, locked);
 }
 
+bool readRfid() {
+  char buffer[TAG_LENGTH];
+  int count = 0;
+  bool tagChanged = false;
+
+  if (rfidSerial.available()) {
+    if (rfidSerial.read() != 2)
+      return false;
+    while (count < TAG_LENGTH && rfidSerial.available()) {
+      buffer[count] = rfidSerial.read();
+      count++;
+    }
+
+    if (count == TAG_LENGTH) {
+      count = 0;
+      if (rfidSerial.read() != 3)
+        return false;
+      for (int i = 0; i < TAG_LENGTH; i++) {
+        tagChanged |= buffer[i] != rfidTag[i];
+      }
+    }
+    if (tagChanged) {
+      memcpy(rfidTag, buffer, TAG_LENGTH);
+      rfidTag[TAG_LENGTH] = 0;
+      Serial.print("Changed: "); Serial.println(rfidTag);
+    }
+  }
+}
+
 void loop() {
+  readRfid();
   readLightsensor();
   readDataFromMpu();
 
@@ -73,6 +109,9 @@ void loop() {
           setLockState(false);
           break;
       }
+      break;
+    case 'r':
+      xbeeSerial.print("r=");xbeeSerial.println(rfidTag);
       while (xbeeSerial.available())
         xbeeSerial.read();
       break;
