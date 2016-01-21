@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <title>Demo - jQuery Week Calendar</title>
+
+  <link rel='stylesheet' type='text/css' href='libs/css/smoothness/jquery-ui-1.8.11.custom.css' />
+  <link rel='stylesheet' type='text/css' href='css/jquery.weekcalendar.css' />
+  <style type='text/css'>
+  body {
+    font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+    margin: 0;
+  }
+
+  h1 {
+    margin: 0 0 1em;
+    padding: 0.5em;
+  }
+
+  p.description {
+    font-size: 0.8em;
+    padding: 1em;
+    position: absolute;
+    top: 3.2em;
+    margin-right: 400px;
+  }
+
+  #message {
+    font-size: 0.7em;
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    width: 350px;
+    display: none;
+    padding: 1em;
+    background: #ffc;
+    border: 1px solid #dda;
+  }
+  </style>
+
+  <script type='text/javascript' src='libs/jquery-1.4.4.min.js'></script>
+  <script type='text/javascript' src='libs/jquery-ui-1.8.11.custom.min.js'></script>
+
+  <script type="text/javascript" src="libs/date.js"></script>
+  <script type='text/javascript' src='js/jquery.weekcalendar.js'></script>
+  <script type='text/javascript'>
+  var year = new Date().getFullYear();
+  var month = new Date().getMonth();
+  var day = new Date().getDate();
+  var $calendar;
+
+  sendRequest = function(uri, method, data, is_async) {
+    var request = {
+      url: uri,
+      type: method,
+      contentType: "application/json",
+      accepts: "application/json",
+      cache: false,
+      dataType: 'json',
+      async: is_async,
+      data: JSON.stringify(data),
+      error: function(jqXHR) {
+        console.log("ajax error " + jqXHR.status);
+      }
+    };
+    return request;
+  }
+
+  var eventData = {
+    events : []
+  };
+
+  $(document).ready(function() {
+    $calendar = $('#calendar').weekCalendar({
+      timeslotsPerHour: 4,
+      timeslotHeigh: 30,
+      hourLine: true,
+      data: function(start, end, callback) {
+        callback(eventData);
+      },
+      use24Hour: true,
+      defaultEventLength: 12,
+      allowEventDelete: true,
+      newEventText: "Juri",
+      firstDayOfWeek: function(calendar) {
+        return 1;
+      },
+      resizable: function(calEvent, element) {
+        return false;
+      },
+      deletable: function(calEvent, element) {
+        return calEvent.id == undefined;
+      },
+      height: function($calendar) {
+        return $(window).height() - $('h1').outerHeight(true);
+      },
+      eventRender : function(calEvent, $event) {
+        if (calEvent.end.getTime() < new Date().getTime()) {
+          $event.css('backgroundColor', '#aaa');
+          $event.find('.time').css({'backgroundColor': '#999', 'border':'1px solid #888'});
+        }
+      },
+      eventNew: function(calEvent, $event) {
+        displayMessage('<strong>Added event</strong><br/>Start: ' + calEvent.start + '<br/>End: ' + calEvent.end + ' id: ' + calEvent.id);
+        $.ajax(sendRequest("api/reservation", 'POST', calEvent, true));
+      },
+      eventDrop: function(calEvent, $event) {
+        displayMessage('<strong>Moved Event</strong><br/>Start: ' + calEvent.start + '<br/>End: ' + calEvent.end);
+      }
+    });
+
+    function displayMessage(message) {
+      $('#message').html(message).fadeIn();
+    }
+
+    $('<div id="message" class="ui-corner-all"></div>').prependTo($('body'));
+
+    request = sendRequest("api/reservation", 'GET');
+    request.success = function(data) {
+      reservations = data.list;
+      for (i in reservations) {
+        var newReservation = reservations[i];
+        console.log(newReservation);
+        startDate = Date.parse(newReservation.start),
+        console.log(startDate);
+        var newEvent = {
+            'id': newReservation.id,
+            'title': newReservation.user,
+            'start': startDate,
+            'end': new Date(startDate.getTime()).addHours(2)
+          }
+        console.log(newEvent);
+        eventData.events.push(newEvent);
+        $calendar.weekCalendar('refresh');
+      }
+    }
+    $.ajax(request);
+  });
+
+</script>
+</head>
+<body>
+  <h1>Reservations<button>Save</button></h1>
+
+  <div id='calendar'></div>
+
+</body>
+</html>

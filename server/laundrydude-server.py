@@ -108,6 +108,19 @@ def save_data():
 
 	return jsonify({"e": 0}), 201
 
+@app.route('/laundrydude/api/reservation', methods=['POST'])
+def save_reservation():
+	print request.json
+	print domain.Reservation(
+		user=request.json['title'],
+		start=datetime.datetime.strptime(
+			request.json['start'], "%Y-%m-%dT%H:%M:%S.000Z"))
+	return jsonify({"e": 0}), 201
+
+@app.route('/laundrydude/api/reservation', methods=['GET'])
+def get_reservations():
+	return jsonify(domain.sqlresultToDictList(domain.Reservation.select())), 200
+
 
 if __name__ == '__main__':
 	data_types = domain.createDb()
