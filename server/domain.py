@@ -1,4 +1,4 @@
-from sqlobject import SQLObject, FloatCol, IntCol, DateTimeCol, connectionForURI, sqlhub
+from sqlobject import SQLObject, FloatCol, IntCol, DateTimeCol, connectionForURI, sqlhub, UnicodeCol
 
 #DATABASE_FILE = '/:memory:'
 DATABASE_FILE = '/tmp/laundrydude.db'
@@ -40,6 +40,13 @@ class State(DataPoint):
 	@staticmethod
 	def getDataType():
 		return 's'
+
+class RfidCard(DataPoint):
+	value = UnicodeCol()
+
+	@staticmethod
+	def getDataType():
+		return 'r'
 
 def connectDb():
 	data_types = {}

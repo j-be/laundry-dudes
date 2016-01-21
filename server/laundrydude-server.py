@@ -56,7 +56,7 @@ def get_data():
 def get_last_data():
 	values = {}
 
-	for data_type in ['h', 's', 't']:
+	for data_type in ['h', 's', 't', 'r']:
 		domain_cls = data_types[data_type]
 		last_row = domain_cls.select().orderBy('-id').limit(1).getOne()
 		values[data_type] = (_getTimeOfDay(last_row.timestamp), last_row.value)
@@ -86,7 +86,10 @@ def save_data():
 		abort(400)
 
 	for data_type in data_dict.keys():
-		value = float(data_dict[data_type].strip())
+		if data_type == "r":
+			value = data_dict[data_type].strip()
+		else:
+			value = float(data_dict[data_type].strip())
 
 		if data_type == "l":
 			if value > LED_THRESHOLD and washer_state.value == 0:
