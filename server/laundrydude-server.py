@@ -63,6 +63,10 @@ def get_last_data():
 
 	return jsonify(values), 200
 
+@app.route('/laundrydude/api/blocker')
+def get_blocker_state():
+	return "b=0", 200
+
 @app.route('/laundrydude/api/clear')
 def clear_db():
 	print "Clearing DB..."
