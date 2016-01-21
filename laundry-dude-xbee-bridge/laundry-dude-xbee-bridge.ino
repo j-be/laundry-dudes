@@ -36,6 +36,7 @@ void loop() {
 	request('t');
 	delay(1000);
 	request('a');
+	request('r');
 	delay(1000);
 	getData();
 	set('b', block);
