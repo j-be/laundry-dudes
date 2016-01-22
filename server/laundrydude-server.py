@@ -1,6 +1,9 @@
 #!flask/bin/python
 import time
 import datetime
+import smtplib
+
+from email.mime.text import MIMEText
 
 import domain
 
@@ -20,6 +23,28 @@ def _getTimeOfDay(dt):
 def changeState(new_state):
 	global washer_state
 	washer_state = domain.State(value=new_state)
+
+	if new_state == 4:
+		user = getCurrentUser()
+		if user is not None:
+			sendMail(user.email, "[LaundryDude] Washer done!",
+				"Hi %s,\n\nyour laundry is done!\n\nKind regards,\n"
+				"your LaundryDudes" % user.name)
+
+def sendMail(to,subject,text):
+	fromAddress = 'laundry.dude.notificator@gmail.com'
+
+	msg = MIMEText(text)
+	msg['Subject'] = subject
+	msg['From'] = fromAddress
+	msg['To'] = to
+
+	# Send the mail
+	server = smtplib.SMTP('smtp.gmail.com:587')
+	server.starttls()
+	server.login(fromAddress, password)
+	server.sendmail(fromAddress, to, msg.as_string())
+	server.quit()
 
 @app.route('/laundrydude/')
 def index():
@@ -138,4 +163,5 @@ def get_reservations():
 if __name__ == '__main__':
 	data_types = domain.createDb()
 	washer_state = domain.State(value=0)
+	sendMail('juriberlanda@hotmail.com', '[LaundryDudes] Started', '')
 	app.run(host='0.0.0.0', debug=True)

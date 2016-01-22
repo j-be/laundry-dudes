@@ -56,6 +56,7 @@ class Reservation(SQLObject):
 
 class User(SQLObject):
 	name = UnicodeCol()
+	email = UnicodeCol()
 	rfid = UnicodeCol()
 
 def connectDb():
@@ -75,9 +76,8 @@ def createDb():
 		cls.createTable(True)
 
 	User.deleteMany("1 = 1")
-	User(name="Blue", rfid="01005D0EB9EB")
-	User(name="Red", rfid="01000543581F")
-	print sqlresultToDict(User.select())
+	User(name="Blue", rfid="01005D0EB9EB", email="")
+	User(name="Red", rfid="01000543581F", email="")
 
 	return ret
 
