@@ -38,7 +38,7 @@ char lockTag[TAG_LENGTH + 1];
 bool locked = false;
 unsigned long lastRead = 0;
 
-char buffer[TAG_LENGTH + 1];
+char buffer[TAG_LENGTH];
 int count = 0;
 
 // Software serial for XBee module
@@ -70,7 +70,6 @@ bool readRfid() {
       Serial.println((int)tmp);
       if (tmp == 2) {
         count++;
-        buffer[TAG_LENGTH] = 0;
         Serial.println("Got start");
       }
     }
@@ -153,7 +152,7 @@ void processRfid() {
     return;
 
   // FIXME: Runs over after 50 days!
-  if (millis() - lastRead < 1000) {
+  if (millis() - lastRead < 2000) {
     lastRead = millis();
     return;
   }
@@ -175,6 +174,7 @@ void processRfid() {
 }
 
 void loop() {
+
   processRfid();
   readLightsensor();
   readDataFromMpu();
@@ -262,14 +262,12 @@ void checkFifoOnMpu() {
   // get current FIFO count
   fifoCount = mpu.getFIFOCount();
 
-  // check for overflow (this should never happen unless our code is too inefficient)
+  // Check for overflow
   if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
     Serial.println(F("FIFO overflow!"));
-    // reset so we can continue cleanly
     mpu.resetFIFO();
-    // otherwise, check for DMP data ready interrupt (this should happen frequently)
+  // Check for new data
   } else if (mpuIntStatus & 0x02 && fifoCount < packetSize)
-    // wait for correct available data length, should be a VERY short wait
     while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
 }
 
