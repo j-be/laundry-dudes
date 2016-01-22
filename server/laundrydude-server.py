@@ -1,6 +1,6 @@
 #!flask/bin/python
-import time
 import datetime
+import time
 import smtplib
 
 from email.mime.text import MIMEText

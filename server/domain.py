@@ -74,6 +74,8 @@ def createDb():
 
 	for cls in SQLObject.__subclasses__():
 		cls.createTable(True)
+	for cls in DataPoint.__subclasses__():
+		cls.createTable(True)
 
 	User.deleteMany("1 = 1")
 	User(name="Blue", rfid="01005D0EB9EB", email="")
