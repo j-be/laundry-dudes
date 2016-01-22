@@ -21,7 +21,7 @@ def changeState(new_state):
 	global washer_state
 	washer_state = domain.State(value=new_state)
 
-@app.route('/laundrydude')
+@app.route('/laundrydude/')
 def index():
 	return app.send_static_file('index.html')
 
@@ -83,6 +83,20 @@ def clear_db():
 
 	return jsonify({'e': 0}), 200
 
+def handleStateChange(key, value):
+	if key == "l":
+		if value > LED_THRESHOLD and washer_state.value == 0:
+			changeState(1)
+		if value <= LED_THRESHOLD and washer_state.value == 1:
+			changeState(2)
+		if value > LED_THRESHOLD and washer_state.value > 1 and washer_state != 4:
+			changeState(4)
+		if value <= LED_THRESHOLD and washer_state.value == 4:
+			changeState(0)
+	elif key == "a":
+		if abs(value + 1100) > 300 and washer_state.value == 2:
+			changeState(3)
+
 @app.route('/laundrydude/api/data', methods=['POST'])
 def save_data():
 	global washer_state
@@ -97,21 +111,8 @@ def save_data():
 			value = data_dict[data_type].strip()
 		else:
 			value = float(data_dict[data_type].strip())
-
-		if data_type == "l":
-			if value > LED_THRESHOLD and washer_state.value == 0:
-				changeState(1)
-			if value <= LED_THRESHOLD and washer_state.value == 1:
-				changeState(2)
-			if value > LED_THRESHOLD and washer_state.value > 1 and washer_state != 4:
-				changeState(4)
-			if value <= LED_THRESHOLD and washer_state.value == 4:
-				changeState(0)
-		elif data_type == "a":
-			if abs(value + 1100) > 300 and washer_state.value == 2:
-				changeState(3)
-
 		data_types[data_type](value=value)
+		handleStateChange(data_type, value)
 
 	return jsonify({"e": 0}), 201
 
