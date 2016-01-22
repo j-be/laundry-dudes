@@ -33,13 +33,16 @@ uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64];
 
+// Lock related stuff
 char rfidTag[TAG_LENGTH + 1];
 char lockTag[TAG_LENGTH + 1];
 bool locked = false;
-unsigned long lastRead = 0;
 
+// RFID read stuff
+unsigned long lastRead = 0;
 char buffer[TAG_LENGTH];
 int count = 0;
+#define RFID_READ_NO_CARD 1000
 
 // Software serial for XBee module
 SoftwareSerial xbeeSerial(2, 3); // RX, TX
@@ -113,10 +116,8 @@ bool compareReadTag(const char* otherTag) {
 
 bool checkRfidChecksum(const char* buffer) {
   uint16_t checkSum = 0;
-  char checkSum_L = 0;
-  char checkSum_H = 0;
-  String hexstr = "";
   uint16_t tmp = 0;
+  String hexstr = "";
 
   // Calculate
   for (int i = 0; i < (TAG_LENGTH - 2) / 2; i++) {
@@ -132,7 +133,7 @@ bool checkRfidChecksum(const char* buffer) {
   hexstr = "0x";
   hexstr += buffer[TAG_LENGTH - 2];
   hexstr += buffer[TAG_LENGTH - 1];
-  tmp = strtoul(hexstr.c_str(), 0, 16);//hexstr.toInt();
+  tmp = strtoul(hexstr.c_str(), 0, 16);
   return checkSum == tmp;
 }
 
@@ -152,7 +153,7 @@ void processRfid() {
     return;
 
   // FIXME: Runs over after 50 days!
-  if (millis() - lastRead < 2000) {
+  if (millis() - lastRead < RFID_READ_NO_CARD) {
     lastRead = millis();
     return;
   }
@@ -255,7 +256,6 @@ void initMpu() {
     Serial.print(devStatus);
     Serial.println(F(")"));
   }
-
 }
 
 bool checkFifoOnMpu() {
