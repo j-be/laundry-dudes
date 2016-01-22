@@ -34,6 +34,12 @@ uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64];
 
 char rfidTag[TAG_LENGTH + 1];
+char lockTag[TAG_LENGTH + 1];
+bool locked = false;
+unsigned long lastRead = 0;
+
+char buffer[TAG_LENGTH + 1];
+int count = 0;
 
 // Software serial for XBee module
 SoftwareSerial xbeeSerial(2, 3); // RX, TX
@@ -53,41 +59,123 @@ void setup() {
   initMpu();
 }
 
-void setLockState(bool locked) {
-  digitalWrite(A0, locked);
-}
-
 bool readRfid() {
-  char buffer[TAG_LENGTH];
-  int count = 0;
   bool tagChanged = false;
+  bool ret = false;
+  char tmp;
 
-  if (rfidSerial.available()) {
-    if (rfidSerial.read() != 2)
-      return false;
-    while (count < TAG_LENGTH && rfidSerial.available()) {
-      buffer[count] = rfidSerial.read();
+  while (rfidSerial.available()) {
+    while (rfidSerial.available() && count == -1) {
+      tmp = rfidSerial.read();
+      Serial.println((int)tmp);
+      if (tmp == 2) {
+        count++;
+        buffer[TAG_LENGTH] = 0;
+        Serial.println("Got start");
+      }
+    }
+
+    while (count > -1 && count < TAG_LENGTH && rfidSerial.available()) {
+      tmp = rfidSerial.read();
+      if (tmp == 2) {
+        count = 0;
+        return false;
+      }
+      buffer[count] = tmp;
       count++;
     }
 
     if (count == TAG_LENGTH) {
       count = 0;
+
       if (rfidSerial.read() != 3)
         return false;
-      for (int i = 0; i < TAG_LENGTH; i++) {
-        tagChanged |= buffer[i] != rfidTag[i];
-      }
-    }
-    if (tagChanged) {
+
+      if (!checkRfidChecksum(buffer))
+        return false;
+
       memcpy(rfidTag, buffer, TAG_LENGTH);
       rfidTag[TAG_LENGTH] = 0;
-      Serial.print("Changed: "); Serial.println(rfidTag);
+      return true;
     }
+  }
+  return false;
+}
+
+bool compareReadTag(const char* otherTag) {
+  bool ret = true;
+
+  for (int i = 0; i < TAG_LENGTH; i++) {
+    ret &= otherTag[i] == rfidTag[i];
+  }
+
+  return ret;
+}
+
+bool checkRfidChecksum(const char* buffer) {
+  uint16_t checkSum = 0;
+  char checkSum_L = 0;
+  char checkSum_H = 0;
+  String hexstr = "";
+  uint16_t tmp = 0;
+
+  // Calculate
+  for (int i = 0; i < (TAG_LENGTH - 2) / 2; i++) {
+    hexstr = "0x";
+    hexstr += buffer[2*i];
+    hexstr += buffer[2*i + 1];
+
+    tmp = strtoul(hexstr.c_str(), 0, 16);
+    checkSum = checkSum ^ tmp;
+  }
+
+  // Check
+  hexstr = "0x";
+  hexstr += buffer[TAG_LENGTH - 2];
+  hexstr += buffer[TAG_LENGTH - 1];
+  tmp = strtoul(hexstr.c_str(), 0, 16);//hexstr.toInt();
+  return checkSum == tmp;
+}
+
+void setLockState(bool newState) {
+  digitalWrite(A0, newState);
+  locked = newState;
+
+  // Clear lock Tag
+  if (!newState)
+    for (int i = 0; i < TAG_LENGTH; i++)
+      lockTag[i] = '#';
+
+}
+
+void processRfid() {
+  if (!readRfid())
+    return;
+
+  // FIXME: Runs over after 50 days!
+  if (millis() - lastRead < 1000) {
+    lastRead = millis();
+    return;
+  }
+  lastRead = millis();
+
+  if (locked) {
+    bool tagValid = compareReadTag(lockTag);
+    if (tagValid) {
+      Serial.print("Tag valid: "); Serial.println(rfidTag);
+    } else {
+      Serial.print("Tag invalid: "); Serial.println(rfidTag);
+    }
+    setLockState(!tagValid);
+  } else {
+    setLockState(true);
+    memcpy(lockTag, rfidTag, TAG_LENGTH + 1);
+    Serial.print("Locked with tag: "); Serial.println(lockTag);
   }
 }
 
 void loop() {
-  readRfid();
+  processRfid();
   readLightsensor();
   readDataFromMpu();
 
@@ -111,9 +199,8 @@ void loop() {
       }
       break;
     case 'r':
-      xbeeSerial.print("r=");xbeeSerial.println(rfidTag);
-      while (xbeeSerial.available())
-        xbeeSerial.read();
+      // FIXME: This is highly dangerous
+      xbeeSerial.print("r=");xbeeSerial.println(lockTag);
       break;
     }
   }
