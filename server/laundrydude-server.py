@@ -4,6 +4,7 @@ import datetime
 
 import domain
 
+from sqlobject import SQLObjectNotFound
 from flask import Flask, request, jsonify, abort
 
 LED_THRESHOLD = 500
@@ -56,10 +57,16 @@ def get_data():
 def get_last_data():
 	values = {}
 
-	for data_type in ['h', 's', 't', 'r']:
+	for data_type in ['h', 's', 't']:
 		domain_cls = data_types[data_type]
 		last_row = domain_cls.select().orderBy('-id').limit(1).getOne()
 		values[data_type] = (_getTimeOfDay(last_row.timestamp), last_row.value)
+
+	try:
+		rfid_tag = domain.RfidCard.select().orderBy('-id').limit(1).getOne().value
+		values['u'] = domain.User.select('rfid == "' + rfid_tag + '"').getOne().name
+	except SQLObjectNotFound:
+		pass
 
 	return jsonify(values), 200
 

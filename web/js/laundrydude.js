@@ -34,7 +34,10 @@ getLastData = function() {
     showData(state[0], '#state-timestamp');
     showData(STATE_NAMES[state[1]], '#state-value');
 
-    showData(data['r'][1], "#user-name");
+    if (data['u'] == undefined)
+      showData("Unlocked", "#user-name");
+    else
+      showData("Locked by " + data['u'], "#user-name");
   })
 }
 
