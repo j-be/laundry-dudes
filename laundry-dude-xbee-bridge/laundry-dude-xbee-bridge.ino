@@ -13,6 +13,11 @@ char block = false;
 SoftwareSerial xbeeSerial(8, 9); // RX, TX
 Process curl;
 
+int requested[] = {0, 0, 0, 0, 0};
+String requests = "htlar";
+
+int ndx = 0;
+
 void setup() {
 	Bridge.begin();
 
@@ -29,18 +34,13 @@ void setLockState(bool locked) {
 }
 
 void loop() {
-	request('l');
-	delay(1000);
-	request('h');
-	delay(1000);
-	request('t');
-	delay(1000);
-	request('a');
-	request('r');
-	delay(1000);
-	getData();
-	set('b', block);
-	setLockState(block == '1');
+	for (int i = 0; i < requests.length(); i++) {
+		request(requests.charAt(i));
+		while(processResponse());
+	}
+
+	for (int i = 0; i < 10000; i++)
+		processResponse();
 }
 
 void set(char type, char value) {
@@ -48,50 +48,60 @@ void set(char type, char value) {
 	xbeeSerial.println(value);
 }
 
-void request(char type) {
-	Console.print("Request: ");Console.println(type);
-	while (xbeeSerial.available()) xbeeSerial.read();
+bool processResponse() {
+	char type;
+	int indexOfType;
 
-	xbeeSerial.print(type);
-	int x = 0;
-	while (!xbeeSerial.available() && x < 10) {
-		x++;
-		delay(100);
+	while (recvWithEndMarker()) {
+		type = receivedChars[0];
+		indexOfType = requests.indexOf(type);
+		if (indexOfType < 0)
+			return false;
+		sendData();
+		requested[indexOfType] = 0;
+		return true;
 	}
-	recvWithEndMarker();
-	sendData();
+}
+
+void request(char type) {
+	requested[requests.indexOf(type)] %= 50;
+	requested[requests.indexOf(type)]++;
+
+	if (requested[requests.indexOf(type)] != 1) {
+		return;
+	}
+
+	Console.print("Request: ");Console.println(type);
+	xbeeSerial.println(type);
 }
 
 void sendData() {
-	if (newData == true) {
-		Console.print("This just in ... ");
-		Console.println(receivedChars);
-		postData(receivedChars);
-		newData = false;
-	}
+	Console.print("Sending: ");
+	Console.println(receivedChars);
+	postData(receivedChars);
 }
 
-void recvWithEndMarker() {
-	static byte ndx = 0;
+bool recvWithEndMarker() {
 	char endMarker = '\n';
 	char rc;
 
-	while (xbeeSerial.available() > 0 && newData == false) {
+	while (xbeeSerial.available()) {
 		rc = xbeeSerial.read();
+		Console.print(rc);
 
 		if (rc != endMarker) {
 			receivedChars[ndx] = rc;
 			ndx++;
-			if (ndx >= numChars) {
+			if (ndx >= numChars)
 				ndx = numChars - 1;
-			}
-		}
-		else {
+		} else {
 			receivedChars[ndx] = '\0'; // terminate the string
 			ndx = 0;
-			newData = true;
+			return true;
 		}
 	}
+
+	return false;
 }
 
 void postData(const char* data) {
