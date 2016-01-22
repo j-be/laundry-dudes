@@ -53,6 +53,13 @@ def get_data():
 
 	return jsonify(values), 200
 
+def getCurrentUser():
+	try:
+		rfid_tag = domain.RfidCard.select().orderBy('-id').limit(1).getOne().value
+		return domain.User.select('rfid == "' + rfid_tag + '"').getOne()
+	except SQLObjectNotFound:
+		return None
+
 @app.route('/laundrydude/api/last-data')
 def get_last_data():
 	values = {}
@@ -62,11 +69,9 @@ def get_last_data():
 		last_row = domain_cls.select().orderBy('-id').limit(1).getOne()
 		values[data_type] = (_getTimeOfDay(last_row.timestamp), last_row.value)
 
-	try:
-		rfid_tag = domain.RfidCard.select().orderBy('-id').limit(1).getOne().value
-		values['u'] = domain.User.select('rfid == "' + rfid_tag + '"').getOne().name
-	except SQLObjectNotFound:
-		pass
+	user = getCurrentUser()
+	if user is not None:
+		values['u'] = user.name
 
 	return jsonify(values), 200
 
