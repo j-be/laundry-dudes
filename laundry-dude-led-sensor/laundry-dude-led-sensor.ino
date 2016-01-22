@@ -258,37 +258,42 @@ void initMpu() {
 
 }
 
-void checkFifoOnMpu() {
+bool checkFifoOnMpu() {
   // get current FIFO count
   fifoCount = mpu.getFIFOCount();
 
   // Check for overflow
-  if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
+  if ((mpuIntStatus & 0x10) || fifoCount > 1024) {
     Serial.println(F("FIFO overflow!"));
     mpu.resetFIFO();
+    return false;
   // Check for new data
   } else if (mpuIntStatus & 0x02 && fifoCount < packetSize)
-    while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
+    return false;
+
+  return true;
 }
 
 void readDataFromMpu() {
   mpuIntStatus = mpu.getIntStatus();
 
-  if (mpuIntStatus & 0x02) {
-    checkFifoOnMpu();
+  if (!mpuIntStatus & 0x02)
+    return;
 
-    // Read all packets from FIFO and keep last
-    do {
-      mpu.getFIFOBytes(fifoBuffer, packetSize);
-      fifoCount -= packetSize;
-    } while (fifoCount > packetSize);
+  if (!checkFifoOnMpu())
+    return;
 
-    // Get Acceleration in world-frame
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetAccel(&aa, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-    mpu.resetFIFO();
-  }
+  // Read all packets from FIFO and keep last
+  do {
+    mpu.getFIFOBytes(fifoBuffer, packetSize);
+    fifoCount -= packetSize;
+  } while (fifoCount > packetSize);
+
+  // Get Acceleration in world-frame
+  mpu.dmpGetQuaternion(&q, fifoBuffer);
+  mpu.dmpGetAccel(&aa, fifoBuffer);
+  mpu.dmpGetGravity(&gravity, &q);
+  mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+  mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+  mpu.resetFIFO();
 }
