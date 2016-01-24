@@ -51,7 +51,7 @@ class RfidCard(DataPoint):
 		return 'r'
 
 class Reservation(SQLObject):
-	start = DateTimeCol()
+	start = FloatCol()
 	user = UnicodeCol()
 
 class User(SQLObject):

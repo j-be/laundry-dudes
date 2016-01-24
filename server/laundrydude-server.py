@@ -148,11 +148,12 @@ def save_data():
 
 @app.route('/laundrydude/api/reservation', methods=['POST'])
 def save_reservation():
+	start_time = time.mktime(time.strptime(
+			request.json['start'], "%Y-%m-%dT%H:%M:%S.000Z"))
 	print request.json
 	print domain.Reservation(
 		user=request.json['title'],
-		start=datetime.datetime.strptime(
-			request.json['start'], "%Y-%m-%dT%H:%M:%S.000Z"))
+		start=start_time + 3600)
 	return jsonify({"e": 0}), 201
 
 @app.route('/laundrydude/api/reservation', methods=['GET'])

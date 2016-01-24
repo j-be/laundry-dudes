@@ -121,13 +121,13 @@
       for (i in reservations) {
         var newReservation = reservations[i];
         console.log(newReservation);
-        startDate = Date.parse(newReservation.start),
+        startDate = newReservation.start * 1000;
         console.log(startDate);
         var newEvent = {
             'id': newReservation.id,
             'title': newReservation.user,
-            'start': startDate,
-            'end': new Date(startDate.getTime()).addHours(2)
+            'start': new Date(startDate),
+            'end': new Date(startDate).addHours(2)
           }
         console.log(newEvent);
         eventData.events.push(newEvent);
