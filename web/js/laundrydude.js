@@ -38,6 +38,11 @@ getLastData = function() {
       showData("Unlocked", "#user-name");
     else
       showData("Locked by " + data['u'], "#user-name");
+
+    if (data['r'] == undefined)
+      showData("No reservations pending...", "#next-reservation")
+    else
+      showData(data['r'].user + " at " + data['r'].start, "#next-reservation")
   })
 }
 

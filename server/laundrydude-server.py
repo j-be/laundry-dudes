@@ -46,6 +46,16 @@ def sendMail(to,subject,text):
 	server.sendmail(fromAddress, to, msg.as_string())
 	server.quit()
 
+def getNextReservation():
+	try:
+		now = time.time()
+		select_clause = 'start > %s' % now
+		reservation = domain.Reservation.select(select_clause).orderBy('start').limit(1)
+		reservation = reservation.getOne()
+		return reservation
+	except SQLObjectNotFound:
+		return None
+
 @app.route('/laundrydude/')
 def index():
 	return app.send_static_file('index.html')
@@ -97,6 +107,14 @@ def get_last_data():
 	user = getCurrentUser()
 	if user is not None:
 		values['u'] = user.name
+
+	reservation = getNextReservation()
+	if reservation:
+		reservation_info = {}
+		reservation_info['user'] = reservation.user
+		reservation_info['start'] = _getTimeOfDay(
+			datetime.datetime.fromtimestamp(reservation.start))
+		values['r'] = reservation_info
 
 	return jsonify(values), 200
 
