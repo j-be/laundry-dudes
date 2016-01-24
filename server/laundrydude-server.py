@@ -105,7 +105,7 @@ def get_last_data():
 		values[data_type] = (_getTimeOfDay(last_row.timestamp), last_row.value)
 
 	user = getCurrentUser()
-	if user is not None:
+	if user:
 		values['u'] = user.name
 
 	reservation = getNextReservation()
@@ -168,7 +168,6 @@ def save_data():
 def save_reservation():
 	start_time = time.mktime(time.strptime(
 			request.json['start'], "%Y-%m-%dT%H:%M:%S.000Z"))
-	print request.json
 	print domain.Reservation(
 		user=request.json['title'],
 		start=start_time + 3600)

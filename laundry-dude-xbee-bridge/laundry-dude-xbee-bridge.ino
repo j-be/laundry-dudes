@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 #include <Console.h>
 
-#define SERVER_URI "http://192.168.1.147:5000/laundrydude/api/data"
+#define DATA_URI "http://192.168.1.147:5000/laundrydude/api/data"
 #define BLOCKER_STATE_URI "http://192.168.1.147:5000/laundrydude/api/blocker"
 
 const byte numChars = 32;
@@ -111,7 +111,7 @@ void postData(const char* data) {
 	curl.begin("curl");
 	curl.addParameter("-X");
 	curl.addParameter("POST");
-	curl.addParameter(SERVER_URI);
+	curl.addParameter(DATA_URI);
 	curl.addParameter("-d");
 	curl.addParameter(data);
 	curl.runAsynchronously();
