@@ -1,6 +1,6 @@
 ON_THRESHOLD = 450;
 
-STATE_NAMES = ["Off", "Idle", "Washing", "Centrifuging", "Done"]
+STATE_NAMES = ["Off", "Idle", "Washing", "Spin-drying", "Done"]
 
 sendRequest = function(uri, method, data, is_async) {
   var request = {
@@ -26,23 +26,29 @@ getLast = function(list) {
 getLastData = function() {
   sendRequest("api/last-data", 'GET').done(function(data) {
     var chart_data = null;
+    var lockState = "Free";
+    var reservation = undefined;
 
     showHumidity(data['h'], data['t']);
 
     state = data['s'];
-    console.log(state);
     showData(state[0], '#state-timestamp');
     showData(STATE_NAMES[state[1]], '#state-value');
 
-    if (data['u'] == undefined)
-      showData("Unlocked", "#user-name");
-    else
-      showData("Locked by " + data['u'], "#user-name");
+    if (data['u'] != undefined)
+      lockState = "Locked by " + data['u'];
 
     if (data['r'] == undefined)
       showData("No reservations pending...", "#next-reservation")
-    else
+    else {
       showData(data['r'].user + " at " + data['r'].start, "#next-reservation")
+      nextReservationStart = new Date(data['r'].startTs * 1000);
+      twoHoursBefore = new Date(nextReservationStart.getTime()).addHours(-2);
+      if (new Date().between(twoHoursBefore, nextReservationStart))
+        lockState = "Reserved for " + data['r'].user;
+    }
+
+    showData(lockState, "#user-name");
   })
 }
 

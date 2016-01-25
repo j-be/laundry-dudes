@@ -10,7 +10,7 @@ import domain
 from sqlobject import SQLObjectNotFound
 from flask import Flask, request, jsonify, abort
 
-LED_THRESHOLD = 500
+LED_THRESHOLD = 600
 
 data_types = None
 app = Flask(__name__)
@@ -22,8 +22,17 @@ def _getTimeOfDay(dt):
 
 def changeState(new_state):
 	global washer_state
+	if new_state == washer_state.value:
+		return;
+
 	washer_state = domain.State(value=new_state)
 
+	if new_state == 3:
+		user = getCurrentUser()
+		if user is not None:
+			sendMail(user.email, "[LaundryDude] Washer almost done...",
+				"Hi %s,\n\nthe machine is spin-drying - your laundry should be "
+				"done soon.\n\nKind regards,\nyour LaundryDudes" % user.name)
 	if new_state == 4:
 		user = getCurrentUser()
 		if user is not None:
@@ -114,6 +123,7 @@ def get_last_data():
 		reservation_info['user'] = reservation.user
 		reservation_info['start'] = _getTimeOfDay(
 			datetime.datetime.fromtimestamp(reservation.start))
+		reservation_info['startTs'] = reservation.start
 		values['r'] = reservation_info
 
 	return jsonify(values), 200
@@ -142,7 +152,7 @@ def handleStateChange(key, value):
 		if value <= LED_THRESHOLD and washer_state.value == 4:
 			changeState(0)
 	elif key == "a":
-		if abs(value + 1100) > 300 and washer_state.value == 2:
+		if abs(value) - 1190 > 300 and washer_state.value == 2:
 			changeState(3)
 
 @app.route('/laundrydude/api/data', methods=['POST'])

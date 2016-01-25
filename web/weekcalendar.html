@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-  <title>Demo - jQuery Week Calendar</title>
+  <title>..:: Laundry Dude Reservation page ::..</title>
 
   <link rel='stylesheet' type='text/css' href='libs/css/smoothness/jquery-ui-1.8.11.custom.css' />
   <link rel='stylesheet' type='text/css' href='css/jquery.weekcalendar.css' />
@@ -81,7 +81,7 @@
       use24Hour: true,
       defaultEventLength: 8,
       allowEventDelete: true,
-      newEventText: "Red",
+      newEventText: "Blue",
       firstDayOfWeek: function(calendar) {
         return 1;
       },
@@ -95,13 +95,14 @@
         return $(window).height() - $('h1').outerHeight(true);
       },
       eventRender : function(calEvent, $event) {
-        if (calEvent.end.getTime() < new Date().getTime()) {
+        if (calEvent.start.getTime() < new Date().getTime()) {
           $event.css('backgroundColor', '#aaa');
           $event.find('.time').css({'backgroundColor': '#999', 'border':'1px solid #888'});
         }
       },
       eventNew: function(calEvent, $event) {
         displayMessage('<strong>Added event</strong><br/>Start: ' + calEvent.start + '<br/>End: ' + calEvent.end + ' id: ' + calEvent.id);
+        console.log(calEvent);
         $.ajax(sendRequest("api/reservation", 'POST', calEvent, true));
       },
       eventDrop: function(calEvent, $event) {
@@ -140,9 +141,7 @@
 </script>
 </head>
 <body>
-  <h1>Reservations<button>Save</button></h1>
-
+  <h1>Reservations</h1>
   <div id='calendar'></div>
-
 </body>
 </html>
